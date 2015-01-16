@@ -92,7 +92,8 @@ public class MapTileLayerArray extends MapTileLayerBase {
     }
 
     private boolean networkAvailable() {
-        return mNetworkAvailabilityCheck == null || mNetworkAvailabilityCheck.getNetworkAvailable();
+        return true;
+        //return mNetworkAvailabilityCheck == null || mNetworkAvailabilityCheck.getNetworkAvailable();
     }
 
     /**

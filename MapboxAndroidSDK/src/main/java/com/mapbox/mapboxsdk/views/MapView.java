@@ -808,7 +808,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
      *                    graphics)
      * @return the minimum zoom necessary to show the bounding box
      */
-    private double minimumZoomForBoundingBox(final BoundingBox boundingBox,
+    public double minimumZoomForBoundingBox(final BoundingBox boundingBox,
                                              final boolean regionFit, final boolean roundedZoom) {
         final RectF rect = Projection.toMapPixels(boundingBox,
                 TileLayerConstants.MAXIMUM_ZOOMLEVEL, mTempRect);
