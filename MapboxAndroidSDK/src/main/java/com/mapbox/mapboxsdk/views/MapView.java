@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -520,6 +521,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
                     }
                 }
         );
+        defaultMarkerOverlay.setOverlayIndex(400);
         addItemizedOverlay(defaultMarkerOverlay);
     }
 
@@ -842,7 +844,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     public MapView zoomToBoundingBox(final BoundingBox boundingBox,
                                      final boolean regionFit, final boolean animated,
                                      final boolean roundedZoom, final boolean userAction) {
-        BoundingBox inter = (mScrollableAreaBoundingBox != null) ? mScrollableAreaBoundingBox
+        BoundingBox inter = (getScrollableAreaBoundingBox() != null) ? getScrollableAreaBoundingBox()
                 .intersect(boundingBox) : boundingBox;
         if (inter == null || !inter.isValid()) {
             return this;
@@ -1132,7 +1134,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         }
         mMinimumZoomLevel = (float) Math.max(
                 mRequestedMinimumZoomLevel,
-                minimumZoomForBoundingBox(mScrollableAreaBoundingBox, mConstraintRegionFit,
+                minimumZoomForBoundingBox(getScrollableAreaBoundingBox(), mConstraintRegionFit,
                         false)
         );
         if (mZoomLevel < mMinimumZoomLevel) {
@@ -1151,7 +1153,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         if (mScrollableAreaLimit == null) {
             mScrollableAreaLimit = new RectF();
         }
-        Projection.toMapPixels(mScrollableAreaBoundingBox, getZoomLevel(false),
+        Projection.toMapPixels(getScrollableAreaBoundingBox(), getZoomLevel(false),
                 mScrollableAreaLimit);
 //        if (mConstraintRegionFit) {
 //            int width = getMeasuredWidth();
@@ -1203,7 +1205,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
      * Returns if the map can go to a specified geo point
      */
     public boolean canGoTo(ILatLng point) {
-        return (mScrollableAreaBoundingBox == null || mScrollableAreaBoundingBox.contains(point));
+        return (getScrollableAreaBoundingBox() == null || getScrollableAreaBoundingBox().contains(point));
     }
 
     /**
@@ -1217,8 +1219,60 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
      * Returns the map current scrollable bounding box
      */
     public BoundingBox getScrollableAreaBoundingBox() {
-        return mScrollableAreaBoundingBox;
+        return extendScrollableAreaBoundingBox(mScrollableAreaBoundingBox);
     }
+
+    /*## BEGIN OF BITMUNKS HACKS ##*/
+
+    private BoundingBox mLastNonExtendedBoundingBox = null;
+    private BoundingBox mExtendedScrollableAreaBoundingBox = null;
+    private int mExtendLeft = 0;
+    private int mExtendTop = 0;
+    private int mExtendRight = 0;
+    private int mExtendBottom = 0;
+
+    public void setExtensions(int left, int top, int right, int bottom) {
+        mExtendLeft = left;
+        mExtendTop = top;
+        mExtendRight = right;
+        mExtendBottom = bottom;
+
+        mLastNonExtendedBoundingBox = null;
+        mExtendedScrollableAreaBoundingBox = null;
+    }
+
+    private BoundingBox extendScrollableAreaBoundingBox(BoundingBox boundingBox) {
+        if (mLastNonExtendedBoundingBox == boundingBox)
+            return mExtendedScrollableAreaBoundingBox;
+
+        if (getBoundingBox() == null)
+            return boundingBox;
+
+        mLastNonExtendedBoundingBox = boundingBox;
+
+        if (boundingBox == null)
+            return null;
+
+        double ratioLeft = ((double) mExtendLeft) / getWidth();
+        double ratioTop = ((double) mExtendTop) / getHeight();
+        double ratioRight = ((double) mExtendRight) / getWidth();
+        double ratioBottom = ((double) mExtendBottom) / getHeight();
+
+        double maxLat = boundingBox.getLatNorth() + getBoundingBox().getLatitudeSpan() * ratioTop;
+        double maxLon = boundingBox.getLonEast() + getBoundingBox().getLongitudeSpan() * ratioRight;
+        double minLat = boundingBox.getLatSouth() - getBoundingBox().getLatitudeSpan() * ratioBottom;
+        double minLon = boundingBox.getLonWest() - getBoundingBox().getLongitudeSpan() * ratioLeft;
+
+        mExtendedScrollableAreaBoundingBox = new BoundingBox(
+                maxLat,
+                maxLon,
+                minLat,
+                minLon);
+
+        return mExtendedScrollableAreaBoundingBox;
+    }
+
+    /*## END OF BITMUNKS HACKS ##*/
 
     /**
      * Returns the map current scrollable bounding limit int map PX

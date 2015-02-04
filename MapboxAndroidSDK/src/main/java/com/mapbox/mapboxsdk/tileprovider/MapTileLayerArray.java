@@ -92,6 +92,7 @@ public class MapTileLayerArray extends MapTileLayerBase {
     }
 
     private boolean networkAvailable() {
+        // Make the tile layer believe it's always online, such that it tries reloading tiles that failed
         return true;
         //return mNetworkAvailabilityCheck == null || mNetworkAvailabilityCheck.getNetworkAvailable();
     }
