@@ -749,6 +749,8 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             setAnimatedZoom(this.mZoomLevel);
             mScroller.forceFinished(true);
             mIsFlinging = false;
+
+            mLastNonExtendedBoundingBox = null;
             updateScrollableAreaLimit();
         }
 
@@ -1770,6 +1772,15 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         super.onDraw(c);
 
         mProjection = updateProjection();
+
+        // Crop clip bounds
+        int dx = (int) mDScroll.x;
+        int dy = (int) mDScroll.y;
+        int minLeft = dx + mExtendLeft;
+        int minTop = dy + mExtendTop;
+        int maxRight = dx + getWidth() - mExtendRight;
+        int maxBottom = dy + getHeight() - mExtendBottom;
+        c.clipRect(new Rect(minLeft, minTop, maxRight, maxBottom));
 
         // Save the current canvas matrix
         c.save();
