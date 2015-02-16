@@ -776,6 +776,8 @@ public class BitmapLruCache {
         return bm;
     }
 
+    private byte[] dummy = null;
+
     private boolean addInBitmapOptions(InputStreamProvider ip, BitmapFactory.Options opts) {
         // Create InputStream for decoding the bounds
         final InputStream is = ip.getInputStream();

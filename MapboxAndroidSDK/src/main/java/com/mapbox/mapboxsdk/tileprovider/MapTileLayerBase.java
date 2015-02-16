@@ -155,6 +155,11 @@ public abstract class MapTileLayerBase implements IMapTileProviderCallback, Tile
         mTileCache = this.createTileCache(aContext);
     }
 
+    public void onLowMemory()
+    {
+        mTileCache.trimMemory();
+    }
+
     /**
      * Called by implementation class methods indicating that they have completed the request as
      * best it can. The tile is added to the cache, and a MAPTILE_SUCCESS_ID message is sent.

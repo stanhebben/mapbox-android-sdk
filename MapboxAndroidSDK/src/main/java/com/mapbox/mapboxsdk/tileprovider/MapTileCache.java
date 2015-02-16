@@ -67,6 +67,12 @@ public class MapTileCache implements TileLayerConstants {
         return sCachedTiles;
     }
 
+    public void trimMemory()
+    {
+        if (sCachedTiles != null)
+            sCachedTiles.trimMemory();
+    }
+
     /**
      * Computes a prefixed key for a tile.
      *

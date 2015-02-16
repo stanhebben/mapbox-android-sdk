@@ -136,7 +136,7 @@ public abstract class MapTileModuleLayerBase implements TileLayerConstants {
             pThreadPoolSize = pPendingQueueSize;
         }
         mExecutor = Executors.newFixedThreadPool(pThreadPoolSize,
-                new ConfigurablePriorityThreadFactory(Thread.NORM_PRIORITY, getThreadGroupName()));
+                new ConfigurablePriorityThreadFactory(Thread.MIN_PRIORITY, getThreadGroupName())); // changed from NORM_PRIORITY
 
         mWorking = new HashMap<MapTile, MapTileRequestState>();
         mPending =

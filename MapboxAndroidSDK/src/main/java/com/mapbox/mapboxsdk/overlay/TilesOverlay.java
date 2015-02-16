@@ -86,6 +86,11 @@ public class TilesOverlay extends SafeDrawOverlay {
         return mDebugPaint;
     }
 
+    public void onLowMemory()
+    {
+        mTileProvider.onLowMemory();
+    }
+
     @Override
     public void onDetach(final MapView pMapView) {
         this.mTileProvider.detach();
