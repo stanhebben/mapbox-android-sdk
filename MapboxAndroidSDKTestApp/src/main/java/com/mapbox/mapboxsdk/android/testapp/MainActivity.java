@@ -49,6 +49,8 @@ public class MainActivity extends ActionBarActivity {
         testFragmentNames.add(getString(R.string.bingTestMap));
         testFragmentNames.add(getString(R.string.saveMapOfflineTestMap));
         testFragmentNames.add(getString(R.string.tapForUTFGridTestMap));
+        testFragmentNames.add(getString(R.string.customMarkerTestMap));
+        testFragmentNames.add(getString(R.string.rotatedMapTestMap));
 
         mDrawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, testFragmentNames));
         // Set the list's click listener
@@ -160,6 +162,12 @@ public class MainActivity extends ActionBarActivity {
                 break;
             case 13:
                 fragment = new TapForUTFGridTestFragment();
+                break;
+            case 14:
+                fragment = new CustomMarkerTestFragment();
+                break;
+            case 15:
+                fragment = new RotatedMapTestFragment();
                 break;
             default:
                 fragment = new MainTestFragment();

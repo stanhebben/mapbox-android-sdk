@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.CoordinateRegion;
 import com.mapbox.mapboxsdk.geometry.CoordinateSpan;
@@ -21,7 +23,7 @@ import com.mapbox.mapboxsdk.overlay.TilesOverlay;
 import com.mapbox.mapboxsdk.views.MapView;
 import java.util.ArrayList;
 
-public class SaveMapOfflineTestFragment extends Fragment implements OfflineMapDownloaderListener {
+public class SaveMapOfflineTestFragment extends Fragment implements MapboxConstants, OfflineMapDownloaderListener {
 
     private static final String TAG = "SaveMapOfflineTestFragment";
 
@@ -95,7 +97,7 @@ public class SaveMapOfflineTestFragment extends Fragment implements OfflineMapDo
         ArrayList<OfflineMapDatabase> offlineMapDatabases = offlineMapDownloader.getMutableOfflineMapDatabases();
         if (offlineMapDatabases != null && offlineMapDatabases.size() > 0) {
             OfflineMapDatabase db = offlineMapDatabases.get(0);
-            Toast.makeText(getActivity(), String.format("Will load MapID = '%s'", db.getMapID()), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), String.format(MAPBOX_LOCALE, "Will load MapID = '%s'", db.getMapID()), Toast.LENGTH_SHORT).show();
 
             OfflineMapTileProvider tp = new OfflineMapTileProvider(getActivity(), db);
             offlineMapOverlay = new TilesOverlay(tp);
@@ -110,7 +112,7 @@ public class SaveMapOfflineTestFragment extends Fragment implements OfflineMapDo
         OfflineMapDownloader offlineMapDownloader = OfflineMapDownloader.getOfflineMapDownloader(getActivity());
         if (offlineMapDownloader.isMapIdAlreadyAnOfflineMapDatabase(getString(R.string.mapbox_id_street))) {
             boolean result = offlineMapDownloader.removeOfflineMapDatabaseWithID(getString(R.string.mapbox_id_street));
-            Toast.makeText(getActivity(), String.format("Result of deletion attempt: '%s'", result), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), String.format(MAPBOX_LOCALE, "Result of deletion attempt: '%s'", result), Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(getActivity(), "It's not an offline database yet.", Toast.LENGTH_LONG).show();
         }
@@ -126,7 +128,7 @@ public class SaveMapOfflineTestFragment extends Fragment implements OfflineMapDo
 
     @Override
     public void stateChanged(OfflineMapDownloader.MBXOfflineMapDownloaderState newState) {
-        Log.i(TAG, String.format("stateChanged to %s", newState));
+        Log.i(TAG, String.format(MAPBOX_LOCALE, "stateChanged to %s", newState));
     }
 
     @Override
@@ -136,7 +138,7 @@ public class SaveMapOfflineTestFragment extends Fragment implements OfflineMapDo
 
     @Override
     public void progressUpdate(final Integer numberOfFilesWritten, final Integer numberOfFilesExpected) {
-        Log.i(TAG, String.format("progressUpdate: files written = %d, files expected = %d", numberOfFilesWritten, numberOfFilesExpected));
+        Log.i(TAG, String.format(MAPBOX_LOCALE, "progressUpdate: files written = %d, files expected = %d", numberOfFilesWritten, numberOfFilesExpected));
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -155,17 +157,17 @@ public class SaveMapOfflineTestFragment extends Fragment implements OfflineMapDo
 
     @Override
     public void networkConnectivityError(Throwable error) {
-        Log.i(TAG, "networkConnectivityError");
+        Log.i(TAG, "networkConnectivityError: " + error);
     }
 
     @Override
     public void sqlLiteError(Throwable error) {
-        Log.i(TAG, "sqlLiteError");
+        Log.i(TAG, "sqlLiteError: " + error);
     }
 
     @Override
     public void httpStatusError(Throwable error) {
-        Log.i(TAG, "httpStatusError");
+        Log.i(TAG, "httpStatusError:" + error);
     }
 
     @Override

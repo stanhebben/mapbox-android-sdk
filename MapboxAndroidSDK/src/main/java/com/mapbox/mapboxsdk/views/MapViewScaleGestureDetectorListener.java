@@ -8,8 +8,10 @@ import android.view.ScaleGestureDetector;
  * A custom gesture detector that processes gesture events and dispatches them
  * to the map's overlay system.
  */
-public class MapViewScaleGestureDetectorListener
-        implements ScaleGestureDetector.OnScaleGestureListener {
+public class MapViewScaleGestureDetectorListener implements ScaleGestureDetector.OnScaleGestureListener {
+
+    private static String TAG = "MapViewScaleGestureDetectorListener";
+
     /**
      * This is the active focal point in terms of the viewport. Could be a local
      * variable but kept here to minimize per-frame allocations.
@@ -56,10 +58,8 @@ public class MapViewScaleGestureDetectorListener
         float focusY = detector.getFocusY();
 
         this.mapView.setScale(currentScale);
-        this.mapView.getController()
-                .offsetDeltaScroll(lastFocusX - focusX, lastFocusY - focusY);
-        this.mapView.getController()
-                .panBy(lastFocusX - focusX, lastFocusY - focusY, true);
+        this.mapView.getController().offsetDeltaScroll(lastFocusX - focusX, lastFocusY - focusY);
+        this.mapView.getController().panBy(lastFocusX - focusX, lastFocusY - focusY, true);
 
         lastFocusX = focusX;
         lastFocusY = focusY;
@@ -88,6 +88,4 @@ public class MapViewScaleGestureDetectorListener
         }, 100);
 
     }
-
-    private static String TAG = "Mapbox scaleDetector";
 }

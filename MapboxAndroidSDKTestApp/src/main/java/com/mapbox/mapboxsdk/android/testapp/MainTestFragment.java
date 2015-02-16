@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-
 import com.mapbox.mapboxsdk.api.ILatLng;
 import com.mapbox.mapboxsdk.geometry.BoundingBox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -49,6 +48,9 @@ public class MainTestFragment extends Fragment {
         currentLayer = "terrain";
         mv.setUserLocationEnabled(true)
             .setUserLocationTrackingMode(UserLocationOverlay.TrackingMode.FOLLOW);
+        // Set a reasonable user location zoom level
+        mv.setUserLocationRequiredZoom(16);
+        
         /*
         // Original GeoJSON Test that caus es crash when Hardware Acceleration when enabled in TestApp
         mv.loadFromGeoJSONURL("https://gist.githubusercontent.com/tmcw/4a6f5fa40ab9a6b2f163/raw/b1ee1e445225fc0a397e2605feda7da74c36161b/map.geojson");
@@ -68,6 +70,10 @@ public class MainTestFragment extends Fragment {
         mv.addMarker(m);
 
         m = new Marker(mv, "Athens", "Greece", new LatLng(37.97885, 23.71399));
+        mv.addMarker(m);
+
+        m = new Marker(mv, "Milwaukee", "Wisconsin", new LatLng(43.04506, -87.92217));
+        m.setIcon(new Icon(getActivity(), Icon.Size.LARGE, "city", "0000FF"));
         mv.addMarker(m);
 
         /*

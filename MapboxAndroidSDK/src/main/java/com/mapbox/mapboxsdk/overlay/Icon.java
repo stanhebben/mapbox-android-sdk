@@ -1,12 +1,14 @@
 package com.mapbox.mapboxsdk.overlay;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import com.mapbox.mapboxsdk.constants.MapboxConstants;
 import com.mapbox.mapboxsdk.util.BitmapUtils;
+import com.mapbox.mapboxsdk.util.MapboxUtils;
 import com.mapbox.mapboxsdk.util.NetworkUtils;
 import com.mapbox.mapboxsdk.util.constants.UtilConstants;
 import java.io.File;
@@ -24,8 +26,11 @@ import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
  */
 public class Icon implements MapboxConstants {
 
+    private static final String TAG = "Icon";
+
     private Marker marker;
     private Drawable drawable;
+    private Context context;
 
     protected static BitmapLruCache sIconCache;
     private static final String DISK_CACHE_SUBDIR = "mapbox_icon_cache";
@@ -94,19 +99,14 @@ public class Icon implements MapboxConstants {
     /**
      * Initialize an icon with size, symbol, and color, and start a
      * download process to load it from the API.
-     *
      * @param context Android context - Used for proper Bitmap Density generation
      * @param size    Size of Icon
      * @param symbol  Maki Symbol
      * @param aColor  Color of Icon
      */
     public Icon(Context context, Size size, String symbol, String aColor) {
-        String url = MAPBOX_BASE_URL + "marker/pin-" + size.getApiString();
-        if (!symbol.equals("")) {
-            url += "-" + symbol + "+" + aColor.replace("#", "") + "@2x.png";
-        } else {
-            url += "+" + aColor.replace("#", "") + "@2x.png";
-        }
+        this.context = context;
+        String url = MapboxUtils.markerIconURL(context, size.apiString, symbol, aColor);
         downloadBitmap(context, url);
     }
 
@@ -127,19 +127,20 @@ public class Icon implements MapboxConstants {
     public Icon setMarker(Marker aMarker) {
         this.marker = aMarker;
         if (drawable != null) {
-            this.marker.setMarker(drawable);
+            this.marker.setMarker(drawable, true);
         }
         return this;
     }
 
     private void downloadBitmap(Context context, String url) {
+        Log.d(TAG, String.format("downloadBitmap() with url = '%s'", url));
         CacheableBitmapDrawable bitmap = getCache(context).getFromMemoryCache(url);
 
         // Cache hit! We're done..
         if (bitmap != null) {
             drawable = bitmap;
             if (marker != null) {
-                marker.setMarker(drawable);
+                marker.setMarker(drawable, true);
             }
             return;
         }
@@ -173,7 +174,7 @@ public class Icon implements MapboxConstants {
                 // out of the cache...
                 drawable = sIconCache.get(url);
                 if (marker != null) {
-                    marker.setMarker(drawable);
+                    marker.setMarker(drawable, true);
                 }
                 return;
             }
@@ -185,7 +186,7 @@ public class Icon implements MapboxConstants {
                 if (list.isEmpty()) {
                     drawable = sIconCache.get(url);
                     if (marker != null) {
-                        marker.setMarker(drawable);
+                        marker.setMarker(drawable, true);
                     }
                     return;
                 }
@@ -212,7 +213,9 @@ public class Icon implements MapboxConstants {
                     }
                     HttpURLConnection connection = NetworkUtils.getHttpURLConnection(new URL(url));
                     // Note, sIconCache cannot be null..
-                    result = sIconCache.put(this.url, connection.getInputStream());
+
+                    BitmapFactory.Options opts = BitmapUtils.getBitmapOptions(context.getResources().getDisplayMetrics());
+                    result = sIconCache.put(this.url, connection.getInputStream(), opts);
                 } catch (IOException e) {
                     Log.e(TAG, "doInBackground: Unable to fetch icon from: " + this.url);
                 }
@@ -227,7 +230,7 @@ public class Icon implements MapboxConstants {
                 synchronized (list) {
                     for (Icon icon : list) {
                         if (icon.marker != null) {
-                            icon.marker.setMarker(bitmap);
+                            icon.marker.setMarker(bitmap, true);
                         }
                     }
                     if (UtilConstants.DEBUGMODE) {
@@ -238,6 +241,4 @@ public class Icon implements MapboxConstants {
             }
         }
     }
-
-    private static final String TAG = "Icon";
 }

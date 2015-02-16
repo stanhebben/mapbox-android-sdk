@@ -14,6 +14,8 @@
     <string name="locateMeTestMap">Locate Me</string>
     <string name="saveMapOfflineTestMap">Save Map Offline</string>
     <string name="tapForUTFGridTestMap">Tap For UTFGrid</string>
+    <string name="customMarkerTestMap">Custom Marker</string>
+    <string name="rotatedMapTestMap">Rotated Map</string>
     <string name="pathTestMap">PathOverlay</string>
     <string name="bingTestMap">Bing Test Map</string>
     <string name="mapbox_id_street">examples.map-i87786ca</string>
@@ -28,5 +30,7 @@
     <string name="loadMapButtonText">Load Map</string>
     <string name="deleteMapsButtonText">Delete Map</string>
     <string name="resetMapButtonText">Reset</string>
+    <string name="testAccessToken">pk.eyJ1IjoiYmxlZWdlIiwiYSI6IkRGLTFPU00ifQ.qJpq3jytAL9A-z_tkNypqg</string>
+    <string name="customInfoWindowOnTouchMessage">Hey, I just customized the CustomInfoWindows\'s onTouchListener()!</string>
 
 </resources>

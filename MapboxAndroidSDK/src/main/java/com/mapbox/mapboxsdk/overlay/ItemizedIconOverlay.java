@@ -105,7 +105,7 @@ public class ItemizedIconOverlay extends ItemizedOverlay {
         return false;
     }
 
-    public boolean addItems(final List items) {
+    public boolean addItems(final List<Marker> items) {
         for (Object item : items) {
             if (item instanceof Marker) {
                 ((Marker) item).setParentHolder(this);

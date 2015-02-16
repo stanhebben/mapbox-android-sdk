@@ -1,22 +1,29 @@
 package com.mapbox.mapboxsdk.overlay;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.Log;
 import com.mapbox.mapboxsdk.R;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.util.BitmapUtils;
 import com.mapbox.mapboxsdk.views.InfoWindow;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.mapbox.mapboxsdk.views.util.Projection;
+import com.mapbox.mapboxsdk.views.util.constants.MapViewConstants;
 
 /**
  * Immutable class describing a LatLng with a Title and a Description.
  */
-public class Marker {
+public class Marker implements MapViewConstants {
+
+    private static String TAG = "Marker";
+
     public static final int ITEM_STATE_FOCUSED_MASK = 4;
     public static final int ITEM_STATE_PRESSED_MASK = 1;
     public static final int ITEM_STATE_SELECTED_MASK = 2;
@@ -31,6 +38,7 @@ public class Marker {
     private Context context;
     private MapView mapView;
     private Icon icon;
+    private boolean isUsingMakiIcon = true;
 
     protected String mUid;
     protected LatLng mLatLng;
@@ -46,6 +54,9 @@ public class Marker {
     private Object mRelatedObject; //reference to an object (of any kind) linked to this item.
     private boolean bubbleShowing;
     private ItemizedOverlay mParentHolder;
+
+    private Drawable mDefaultPinDrawable;
+    private int mDefaultPinRes = R.drawable.defpin;
 
     /**
      * Construct a new Marker, given title, description, and place
@@ -68,31 +79,40 @@ public class Marker {
     public Marker(MapView mv, String aTitle, String aDescription, LatLng aLatLng) {
         super();
         this.mapView = mv;
+        if (mv != null) {
+            this.context = mv.getContext();
+        }
         this.setTitle(aTitle);
         this.setDescription(aDescription);
         this.mLatLng = aLatLng;
-        Log.d(getClass().getCanonicalName(), "markerconst" + mv + aTitle + aDescription + aLatLng);
-        if (mv != null) {
-            mAnchor = mv.getDefaultPinAnchor();
-        }
+        Log.d(TAG, "markerconst" + mv + aTitle + aDescription + aLatLng);
         mParentHolder = null;
+        mAnchor = DEFAULT_PIN_ANCHOR;
+
+        // Note: Only Load Default Marker (if needed) when getMarker() called.
     }
 
     /**
-     * Attach this marker to a given mapview and that mapview's context
-     * @param mv the mapview to add this marker to
-     * @return
+     * Default Marker image loaded from Library
+     * @return BitMapDrawable of the Default Marker image
+     */
+    public Drawable getDefaultPinDrawable() {
+        if (mDefaultPinDrawable == null && this.context != null) {
+            BitmapFactory.Options opts = BitmapUtils.getBitmapOptions(context.getResources().getDisplayMetrics());
+            mDefaultPinDrawable = new BitmapDrawable(context.getResources(), BitmapFactory.decodeResource(context.getResources(), mDefaultPinRes, opts));
+        }
+        return mDefaultPinDrawable;
+    }
+
+    /**
+     * Attach this marker to a given MapView and that MapView's context
+     * @param mv the MapView to add this marker to
+     * @return Marker
      */
     public Marker addTo(MapView mv) {
-        if (mMarker == null) {
-            //if there is an icon it means it's not loaded yet
-            //thus change the drawable while waiting
-            setMarker(mv.getDefaultPinDrawable());
-        }
         mapView = mv;
-        context = mv.getContext();
-        if (mAnchor == null) {
-            mAnchor = mv.getDefaultPinAnchor();
+        if (this.context == null) {
+            context = mv.getContext();
         }
         return this;
     }
@@ -117,14 +137,18 @@ public class Marker {
 
     /**
      * Get this marker's tooltip, creating it if it doesn't exist yet.
-     * @param mv
-     * @return
+     * @param mv MapView
+     * @return InfoWindow
      */
     public InfoWindow getToolTip(MapView mv) {
         if (mToolTip == null || mToolTip.getMapView() != mv) {
             mToolTip = createTooltip(mv);
         }
         return mToolTip;
+    }
+
+    public void setToolTip(InfoWindow mToolTip) {
+        this.mToolTip = mToolTip;
     }
 
     public void closeToolTip() {
@@ -229,14 +253,14 @@ public class Marker {
     }
 
     /**
-     * Gets the drawable for the marker
-     * @param stateBitset
+     * Gets the image (Drawable) used for the Marker's image
+     * @param stateBitset State Of Marker (@see #ITEM_STATE_FOCUSED_MASK , @see #ITEM_STATE_PRESSED_MASK, @see #ITEM_STATE_SELECTED_MASK)
      * @return marker drawable corresponding to stateBitset
      */
     public Drawable getMarker(final int stateBitset) {
-        // marker not specified
+        // marker has not been specified yet, so load Default Marker Pin
         if (mMarker == null) {
-            return null;
+            setMarker(getDefaultPinDrawable(), true);
         }
 
         // set marker state appropriately
@@ -244,17 +268,32 @@ public class Marker {
         return mMarker;
     }
 
-    public void setMarker(final Drawable marker) {
+    /**
+     * Set a custom image to be used as the Marker's image
+     * @param marker Drawable resource to be used as Marker image
+     * @param isMakiIcon True if Maki Icon, False if not (ex: Custom Image)
+     */
+    public void setMarker(final Drawable marker, boolean isMakiIcon) {
         this.mMarker = marker;
         if (marker != null) {
             marker.setBounds(0, 0, marker.getIntrinsicWidth(), marker.getIntrinsicHeight());
+            isUsingMakiIcon = isMakiIcon;
         }
         invalidate();
     }
 
     /**
+     * Set a custom image to be used as the Marker's image
+     * NOTE: Convenience method for setting a custom image as the marker
+     * @param marker Drawable resource to be used as Marker image
+     */
+    public void setMarker(final Drawable marker) {
+        this.setMarker(marker, false);
+    }
+
+    /**
      * Sets the marker hotspot
-     * @param place
+     * @param place Hotspot Location @see #HotspotPlace
      */
     public void setHotspot(HotspotPlace place) {
         if (place == null) {
@@ -335,17 +374,34 @@ public class Marker {
      * Get the width of the marker, based on the width of the image backing it.
      */
     public int getWidth() {
-        return this.mMarker.getIntrinsicWidth();
+        if (mMarker == null) {
+            return 0;
+        }
+        return mMarker.getIntrinsicWidth();
     }
 
     public int getHeight() {
-        return this.mMarker.getIntrinsicHeight() / 2;
+        if (mMarker == null) {
+            return 0;
+        }
+        int result = getRealHeight();
+        if (isUsingMakiIcon) {
+            result = result / 2;
+        }
+        return result;
+    }
+
+    public int getRealHeight() {
+        if (mMarker == null) {
+            return 0;
+        }
+        return mMarker.getIntrinsicHeight();
     }
 
     /**
      * Get the current position of the marker in pixels
-     * @param projection
-     * @param reuse
+     * @param projection Projection
+     * @param reuse PointF to reuse
      */
     public PointF getPositionOnScreen(final Projection projection, final PointF reuse) {
         return projection.toPixels(mCurMapCoords, reuse);
@@ -364,10 +420,12 @@ public class Marker {
         }
         final PointF position = getPositionOnScreen(projection, null);
         final int w = getWidth();
-        final int h = getHeight();
-        final float x = position.x - mAnchor.x * w;
-        final float y = position.y - mAnchor.y * h;
-        reuse.set(x, y, x + w, y + h * 2);
+        final int h = isUsingMakiIcon ? getRealHeight() : getHeight();
+        final float left = position.x - mAnchor.x * w;
+        final float right = left + w;
+        final float top = position.y - mAnchor.y * h;
+        float bottom = top + h;
+        reuse.set(left, top, right, bottom);
         return reuse;
     }
 
@@ -382,6 +440,11 @@ public class Marker {
         final float y = mCurMapCoords.y - mAnchor.y * h;
         reuse.set(x, y, x + w, y + h * 2);
         return reuse;
+    }
+
+
+    protected RectF getHitBounds(final Projection projection, RectF reuse) {
+        return getDrawingBounds(projection, reuse);
     }
 
     public PointF getHotspotScale(HotspotPlace place, PointF reuse) {
@@ -459,7 +522,12 @@ public class Marker {
     public Marker setIcon(Icon aIcon) {
         this.icon = aIcon;
         icon.setMarker(this);
+        isUsingMakiIcon = true;
         return this;
+    }
+
+    public boolean isUsingMakiIcon() {
+        return isUsingMakiIcon;
     }
 
     public PointF getPositionOnMap() {

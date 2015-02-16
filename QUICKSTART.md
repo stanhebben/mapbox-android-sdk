@@ -35,7 +35,8 @@ To add the `MapView` as a layout element, add the following to your xml file:
 android:id="@+id/mapview"
 android:layout_width="fill_parent"
 android:layout_height="fill_parent"
-mapbox:mapid="Your Mapbox mapid" />
+mapbox:mapid="Your Mapbox mapid"
+mapbox:accessToken="Your Mapbox Access Token"/>
 ```
 
 
@@ -54,6 +55,7 @@ a [ZXY image template](http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames).
 
 ```java
 MapView mapView = new MapView(context);
+mapView.setAccessToken("Your Mapbox Access Token");
 mapView.setTileSource(new MapboxTileLayer("examples.map-vyofok3q"));
 ```
 
@@ -143,17 +145,36 @@ Alternatively you can override the methods `onSaveInstanceState()` and
 See this [StackOverflow question](http://stackoverflow.com/questions/4096169/onsaveinstancestate-and-onrestoreinstancestate) for
 more information on these methods
 
+### More Examples Via TestApp
+
+The Mapbox Android SDK is actually an [Android Library Module](https://developer.android.com/tools/projects/index.html#LibraryModules), 
+which means in order to test it out in an emulator or a device during development a [Test Module](https://developer.android.com/tools/projects/index.html#testing) is needed.  We call this test module
+the **TestApp**.  It contains many different examples of new functionality or just ways to do certain things.  We highly recommend checking it out.
+
+The source code for these tests / examples is located under the [MapboxAndroidSDKTestApp directory](https://github.com/mapbox/mapbox-android-sdk/tree/mb-pages/MapboxAndroidSDKTestApp/src/main/java/com/mapbox/mapboxsdk/android/testapp).
+
+If you're interested in running the TestApp yourself (which is also highly recommened!) here's how:
+
+1. Clone the [mapbox-android-sdk](https://github.com/mapbox/mapbox-android-sdk) to your local computer
+2. Open in [Android Studio](http://developer.android.com/tools/studio/index.html) by using `File | Import Project` and selecting the `mapbox-android-sdk` directory that you cloned in Step 1.
+3. Create a Run configuration via `Run | Edit Configurations`, select `Android Application`, and select `MapboxAndroidSDKTestApp` in the Module UI.
+4. Run the TestApp!
+
+![Image Of Importing Project To Android Studio](/images/android-studio-import-project.png)
+
+![Image Of Creating Run Configuration For TestApp](/images/android-studio-create-run-configuration.png)
+
+
 ### Including SDK JavaDoc
 
 JavaDocs are automatically generated and distributed with each official and
-SNAPSHOT release.  They can be downloaded from Maven Central for local
-viewing and / or integration with an IDE.
+SNAPSHOT release.  The can be downloaded from The Central Repository  [official](http://search.maven.org/#search|ga|1|mapbox) or [SNAPSHOT](https://oss.sonatype.org/content/repositories/snapshots/com/mapbox/mapboxsdk/mapbox-android-sdk/) for local viewing and / or integration with an IDE.
 
 ### Generating SDK Documentation (aka JavaDoc)
 
 ```
 cd <PROJECT_HOME>/MapboxAndroidSDK/
-../gradlew clean assembleRelease generatereleaseJavadoc
-cd build/docs/javadoc
+../gradlew clean assembleRelease javadocrelease
+cd build/docs/javadoc/release/
 open index.html
 ```

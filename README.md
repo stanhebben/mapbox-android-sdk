@@ -9,7 +9,7 @@ data and interactive tooltips.
 
 This is a fork of [osmdroid](http://code.google.com/p/osmdroid/), so the entire
 core is open source: it doesn't depend on the Google Maps SDK or any components
-outside of [AOSP](https://source.android.com/) that would require the [Google Play Store](https://play.google.com/).
+outside of [AOSP](https://source.android.com/) that would require the [Google Play Services](https://developer.android.com/google/play-services/).
 
 ## Installation
 
@@ -25,10 +25,7 @@ repositories {
 }
 
 dependencies {
-    compile ('com.mapbox.mapboxsdk:mapbox-android-sdk:0.5.1@aar'){
-        transitive=true
-    }
-    compile ('com.cocoahero.android:geojson:1.0.0@aar'){
+    compile ('com.mapbox.mapboxsdk:mapbox-android-sdk:0.7.0@aar'){
         transitive=true
     }
 }
@@ -43,7 +40,7 @@ repositories {
 }
 
 dependencies {
-    compile ('com.mapbox.mapboxsdk:mapbox-android-sdk:0.6.0-SNAPSHOT@aar'){
+    compile ('com.mapbox.mapboxsdk:mapbox-android-sdk:0.7.1-SNAPSHOT@aar'){
         transitive=true
     }
 }
@@ -58,9 +55,9 @@ For a full example Android project incorporating the SDK in this manner, please 
 At any given time there will be 3 different versions of the SDK to use.  You're welcome to use whichever one makes the most sense for your project, just be aware that each comes with a different level of **stability**.
 
 1. Stable / Supported
- * Currently `0.5.1`
+ * Currently `0.7.0`
 2. SNAPSHOT
- * Currently `0.6.0-SNAPSHOT`
+ * Currently `0.7.1-SNAPSHOT`
 3. Source
 
 ### Manually / Hardcoding In Project
@@ -78,7 +75,7 @@ The Mapbox Android SDK is also packaged as a `.apklib` file.  This allows integr
 <dependency>
     <groupId>com.mapbox.mapboxsdk</groupId>
     <artifactId>mapbox-android-sdk</artifactId>
-    <version>0.5.1</version>
+    <version>0.7.0</version>
     <type>apklib</type>
 </dependency>
 ```
@@ -89,11 +86,11 @@ For more information on how to use Maven and Eclipse together please see Sonatyp
 
 The best way to make sure that the Mapbox Android SDK is setup properly (as well as updated as new versions are released) is to make use of Gradle or Maven as documented above.  However, if that's not possible the Mapbox Android SDK can also be added to the project by hardcoding it in.  Please note that this is **extremely** brittle and not scalable.  Here's the steps:
 
-1. Download the [mapbox-android-sdk-0.5.1.apk](http://search.maven.org/remotecontent?filepath=com/mapbox/mapboxsdk/mapbox-android-sdk/0.5.1/mapbox-android-sdk-0.5.1.apklib).
+1. Download the [mapbox-android-sdk-0.7.0.apklib](http://search.maven.org/remotecontent?filepath=com/mapbox/mapboxsdk/mapbox-android-sdk/0.7.0/mapbox-android-sdk-0.7.0.apklib).
 2. Extract the source code and import it directly into the Eclipse project
-  * `jar xf mapbox-android-sdk-0.5.1.apk`
+  * `jar xf mapbox-android-sdk-0.7.0.apklib`
 3. Download all `.jar` dependencies from [build.gradle](https://github.com/mapbox/mapbox-android-sdk/blob/mb-pages/MapboxAndroidSDK/build.gradle#L35-L39) and add to the Eclipse project as libaries.  Do NOT extract the content of these files.
-4. Download all `.java` files from [Cocoahero's GeoJSON library](https://github.com/cocoahero/android-geojson/tree/master/androidgeojson/src/main/java/com) and add to the Eclipse project's source code.
+4. Automatically Included as of `0.6.0` ~~Download all `.java` files from [Cocoahero's GeoJSON library](https://github.com/cocoahero/android-geojson/tree/master/androidgeojson/src/main/java/com) and add to the Eclipse project's source code.~~
 
 ### Building From Source
 
@@ -107,37 +104,16 @@ import the project by selecting `build.gradle` in the project root directory
 as the project file.
 
 Don't worry about installing Gradle on your system if you don't already have
-it:  the project makes use of Gradle Wrapper, so a correct & current project
+it:  the project makes use of [Gradle Wrapper]((http://www.gradle.org/docs/current/userguide/gradle_wrapper.html)), so a correct & current project
 version of Gradle will automatically be installed and used to run the builds.
 To use the Gradle wrapper just look for `gradlew`  or `gradlew.bat` (Windows)
-in the project's main directory.  For example:
-
-    cd <PROJECT_ROOT>
-     ./gradlew --version
-
-which will produce something like:
-
-```
-------------------------------------------------------------
-Gradle 1.10
-------------------------------------------------------------
-
-Build time:   2013-12-17 09:28:15 UTC
-Build number: none
-Revision:     36ced393628875ff15575fa03d16c1349ffe8bb6
-
-Groovy:       1.8.6
-Ant:          Apache Ant(TM) version 1.9.2 compiled on July 8 2013
-Ivy:          2.2.0
-JVM:          1.7.0_40 (Oracle Corporation 24.0-b56)
-OS:           Mac OS X 10.9.2 x86_64
-```
-
-See the [Gradle Wrapper documentation for more details](http://www.gradle.org/docs/current/userguide/gradle_wrapper.html).
+in the project's main directory.
 
 Then you can build an archive:
 
 ```sh
+cd <PROJECT_ROOT>
+
 ./gradlew clean assembleRelease
 
 # The archive (mapbox-android-sdk-<VERSION>.aar) will be found in

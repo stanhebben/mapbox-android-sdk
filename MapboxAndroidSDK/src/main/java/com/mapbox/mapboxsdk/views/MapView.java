@@ -2,15 +2,12 @@ package com.mapbox.mapboxsdk.views;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Build;
 import android.os.Handler;
@@ -51,9 +48,9 @@ import com.mapbox.mapboxsdk.tileprovider.constants.TileLayerConstants;
 import com.mapbox.mapboxsdk.tileprovider.tilesource.ITileLayer;
 import com.mapbox.mapboxsdk.tileprovider.tilesource.MapboxTileLayer;
 import com.mapbox.mapboxsdk.tileprovider.util.SimpleInvalidationHandler;
-import com.mapbox.mapboxsdk.util.BitmapUtils;
 import com.mapbox.mapboxsdk.util.DataLoadingUtils;
 import com.mapbox.mapboxsdk.util.GeometryMath;
+import com.mapbox.mapboxsdk.util.MapboxUtils;
 import com.mapbox.mapboxsdk.util.NetworkUtils;
 import com.mapbox.mapboxsdk.util.constants.UtilConstants;
 import com.mapbox.mapboxsdk.views.util.OnMapOrientationChangeListener;
@@ -169,10 +166,6 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     TileLoadedListener tileLoadedListener;
     private InfoWindow currentTooltip;
 
-    private int mDefaultPinRes = R.drawable.defpin;
-    private Drawable mDefaultPinDrawable;
-    private PointF mDefaultPinAnchor = DEFAULT_PIN_ANCHOR;
-
     private UserLocationOverlay mLocationOverlay;
 
     /**
@@ -215,11 +208,13 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         this.mRotateGestureDetector =
                 new RotateGestureDetector(aContext, new MapViewRotateGestureDetectorListener(this));
         this.context = aContext;
+        MapboxUtils.setVersionNumber(context.getResources().getString(R.string.mapboxAndroidSDKVersion));
         eventsOverlay = new MapEventsOverlay(aContext, this);
         this.getOverlays().add(eventsOverlay);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.MapView);
         String mapid = a.getString(R.styleable.MapView_mapid);
+        MapboxUtils.setAccessToken(a.getString(R.styleable.MapView_accessToken));
         if (!TextUtils.isEmpty(mapid)) {
             setTileSource(new MapboxTileLayer(mapid));
         } else {
@@ -319,6 +314,15 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
         }
         this.scrollTo(mDScroll.x, mDScroll.y);
         postInvalidate();
+    }
+
+    /**
+     * Set Mapbox Access Token for this MapView.
+     * @see <a href="https://www.mapbox.com/developers/api/#access-tokens">https://www.mapbox.com/developers/api/#access-tokens</a>
+     * @param accessToken String
+     */
+    public void setAccessToken(final String accessToken) {
+        MapboxUtils.setAccessToken(accessToken);
     }
 
     /**
@@ -1107,7 +1111,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     /**
      * Gets the mapView onMapOrientationChangeListener
-     * @Param l the onMapOrientationChangeListener
+     * @param l the onMapOrientationChangeListener
      */
     public void setOnMapOrientationChangeListener(OnMapOrientationChangeListener l) {
         this.mOnMapOrientationChangeListener = l;
@@ -1594,8 +1598,10 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+//        Log.i(TAG, "onTouchEvent with event = " + event);
         // If map rotation is enabled, propagate onTouchEvent to the rotate gesture detector
         if (mMapRotationEnabled) {
+//            Log.i(TAG, "onTouchEvent with Rotation Enabled so passing it along to RotationGestureDetector.onTouchEvent()");
             mRotateGestureDetector.onTouchEvent(event);
         }
         // Get rotated event for some touch listeners.
@@ -1611,10 +1617,13 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
             //Android seems to be able to recognize a scale with one pointer ...
             // what a smart guy... let's prevent this
             if (rotatedEvent.getPointerCount() != 1) {
+//                Log.i(TAG, "rotateEvent.getPointerCount() == 1");
                 mScaleGestureDetector.onTouchEvent(rotatedEvent);
             }
             boolean result = mScaleGestureDetector.isInProgress();
+//            Log.i(TAG, "mScaleGestureDector in progress? '" + result + "'");
             if (!result) {
+//                Log.i(TAG, "mScaleGestureDector not in progress, forward on to mGestureDetector.onTouchEvent()");
                 result = mGestureDetector.onTouchEvent(rotatedEvent);
             } else {
                 //needs to cancel two fingers tap
@@ -1882,7 +1891,7 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     }
 
     /**
-     * Set the user location tracking mode
+     * Set the user location tracking zoom level
      */
     public MapView setUserLocationRequiredZoom(final float zoomLevel) {
         getOrCreateLocationOverlay().setRequiredZoom(zoomLevel);
@@ -2069,31 +2078,5 @@ public class MapView extends ViewGroup implements MapViewConstants, MapEventsRec
     @Override
     public String toString() {
         return "MapView {" + getTileProvider() + "}";
-    }
-
-    public void setDefaultPinRes(int res) {
-        mDefaultPinRes = res;
-    }
-
-    public void setDefaultPinDrawable(Drawable drawable) {
-        mDefaultPinDrawable = drawable;
-    }
-
-    public Drawable getDefaultPinDrawable() {
-        if (mDefaultPinDrawable == null && mDefaultPinRes != 0) {
-            BitmapFactory.Options opts =
-                    BitmapUtils.getBitmapOptions(getResources().getDisplayMetrics());
-            mDefaultPinDrawable = new BitmapDrawable(getResources(),
-                    BitmapFactory.decodeResource(context.getResources(), mDefaultPinRes, opts));
-        }
-        return mDefaultPinDrawable;
-    }
-
-    public void setDefaultPinAnchor(PointF point) {
-        mDefaultPinAnchor = point;
-    }
-
-    public PointF getDefaultPinAnchor() {
-        return mDefaultPinAnchor;
     }
 }
