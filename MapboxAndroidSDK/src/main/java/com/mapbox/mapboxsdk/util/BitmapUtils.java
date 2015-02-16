@@ -24,6 +24,7 @@ public class BitmapUtils {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inDensity = DisplayMetrics.DENSITY_DEFAULT;
         options.inTargetDensity = mDisplayMetrics.densityDpi;
+        options.inPurgeable = true; // TODO: does this work?
         return options;
     }
 

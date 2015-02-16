@@ -747,6 +747,7 @@ public class BitmapLruCache {
                 // Create an options instance if we haven't been provided with one
                 if (opts == null) {
                     opts = new BitmapFactory.Options();
+                    opts.inPurgeable = true; // TODO: does this work?
                 }
 
                 if (opts.inSampleSize <= 1) {
