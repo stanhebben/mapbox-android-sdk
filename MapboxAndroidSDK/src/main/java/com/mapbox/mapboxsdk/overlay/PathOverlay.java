@@ -122,12 +122,19 @@ public class PathOverlay extends Overlay {
             return;
         }
 
+        float[] offset = new float[] {
+                -canvas.getClipBounds().left,
+                -canvas.getClipBounds().top };
+
+        canvas.save();
+        canvas.translate(-offset[0], -offset[1]);
+
         final Projection pj = mapView.getProjection();
 
         // precompute new points to the intermediate projection.
         for (; this.mPointsPrecomputed < size; this.mPointsPrecomputed++) {
             final PointF pt = this.mPoints.get(this.mPointsPrecomputed);
-            pj.toMapPixelsProjected((double) pt.x, (double) pt.y, pt);
+            pj.toMapPixelsProjected(pt.x, pt.y, pt);
         }
 
         PointF screenPoint0 = null; // points on screen
@@ -164,7 +171,7 @@ public class PathOverlay extends Overlay {
             // bounds
             if (screenPoint0 == null) {
                 screenPoint0 = pj.toMapPixelsTranslated(projectedPoint0, this.mTempPoint1);
-                mPath.moveTo(screenPoint0.x, screenPoint0.y);
+                mPath.moveTo(screenPoint0.x + offset[0], screenPoint0.y + offset[1]);
             }
 
             screenPoint1 = pj.toMapPixelsTranslated(projectedPoint1, this.mTempPoint2);
@@ -175,7 +182,7 @@ public class PathOverlay extends Overlay {
                 continue;
             }
 
-            mPath.lineTo(screenPoint1.x, screenPoint1.y);
+            mPath.lineTo(screenPoint1.x + offset[0], screenPoint1.y + offset[1]);
             // update starting point to next position
             projectedPoint0 = projectedPoint1;
             screenPoint0.x = screenPoint1.x;
@@ -196,6 +203,8 @@ public class PathOverlay extends Overlay {
             canvas.drawPath(mPath, this.mPaint);
             this.mPaint.setStrokeWidth(realWidth);
         }
+
+        canvas.restore();
     }
 
     /**
