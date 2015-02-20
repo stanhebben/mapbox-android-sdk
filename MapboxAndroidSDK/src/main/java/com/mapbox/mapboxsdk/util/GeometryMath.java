@@ -191,6 +191,16 @@ public class GeometryMath {
         return (float) (value / Math.pow(2, multiplier));
     }
 
+    /**
+     * simulate a binary right shift of a number without using bit operations.
+     * @param value
+     * @param multiplier
+     * @return
+     */
+    public static double rightShift(final double value, final double multiplier) {
+        return value / Math.pow(2, multiplier);
+    }
+
     public static Rect viewPortRect(final float zoomLevel, final Projection projection,
             final Rect reuse) {
         final Rect out = GeometryMath.reusable(reuse);

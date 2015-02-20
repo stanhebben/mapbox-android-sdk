@@ -33,6 +33,7 @@ import com.mapbox.mapboxsdk.constants.GeoConstants;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.tileprovider.constants.TileLayerConstants;
 import com.mapbox.mapboxsdk.util.GeometryMath;
+import com.mapbox.mapboxsdk.util.PointD;
 import com.mapbox.mapboxsdk.views.MapView;
 
 public class Projection implements GeoConstants {
@@ -165,7 +166,7 @@ public class Projection implements GeoConstants {
     public PointF toPixels(final ILatLng in, final PointF reuse) {
         PointF result = toMapPixels(in, reuse);
         result.offset(-mIntrinsicScreenRectProjection.exactCenterX(),
-                -mIntrinsicScreenRectProjection.exactCenterY());
+                      -mIntrinsicScreenRectProjection.exactCenterY());
         if (mMapOrientation % 360 != 0) {
             GeometryMath.rotatePoint(0, 0, result, mMapOrientation, result);
         }
@@ -232,8 +233,8 @@ public class Projection implements GeoConstants {
             out = new RectF();
         }
         final int mapSize_2 = mapSize(zoom) >> 1;
-        PointF nw = latLongToPixelXY(box.getLatNorth(), box.getLonWest(), zoom, null);
-        PointF se = latLongToPixelXY(box.getLatSouth(), box.getLonEast(), zoom, null);
+        PointF nw = latLongToPixelXY(box.getLatNorth(), box.getLonWest(), zoom, (PointF) null);
+        PointF se = latLongToPixelXY(box.getLatSouth(), box.getLonEast(), zoom, (PointF) null);
         out.set(nw.x, nw.y, se.x, se.y);
         out.offset(-mapSize_2, -mapSize_2);
         return out;
@@ -261,6 +262,27 @@ public class Projection implements GeoConstants {
     }
 
     /**
+     * Performs only the first computationally heavy part of the projection. Call
+     * toMapPixelsTranslated to get the final position.
+     *
+     * @param latitude the latitude of the point
+     * @param longitude the longitude of the point
+     * @param reuse just pass null if you do not have a Point to be 'recycled'.
+     * @return intermediate value to be stored and passed to toMapPixelsTranslated.
+     */
+    public static PointD toMapPixelsProjected(final double latitude, final double longitude,
+                                              final PointD reuse) {
+        final PointD out;
+        if (reuse != null) {
+            out = reuse;
+        } else {
+            out = new PointD();
+        }
+        latLongToPixelXY(latitude, longitude, TileLayerConstants.MAXIMUM_ZOOMLEVEL, out);
+        return out;
+    }
+
+    /**
      * Performs the second computationally light part of the projection. Returns results in
      * <I>screen coordinates</I>.
      *
@@ -270,6 +292,29 @@ public class Projection implements GeoConstants {
      * to the toMapPixelsProjected.
      */
     public PointF toMapPixelsTranslated(final PointF in, final PointF reuse) {
+        final PointF out;
+        if (reuse != null) {
+            out = reuse;
+        } else {
+            out = new PointF();
+        }
+
+        final float zoomDifference = TileLayerConstants.MAXIMUM_ZOOMLEVEL - getZoomLevel();
+        out.set((int) (GeometryMath.rightShift(in.x, zoomDifference) + offsetX),
+                (int) (GeometryMath.rightShift(in.y, zoomDifference) + offsetY));
+        return out;
+    }
+
+    /**
+     * Performs the second computationally light part of the projection. Returns results in
+     * <I>screen coordinates</I>.
+     *
+     * @param in the Point calculated by the toMapPixelsProjected
+     * @param reuse just pass null if you do not have a Point to be 'recycled'.
+     * @return the Point containing the <I>Screen coordinates</I> of the initial LatLng passed
+     * to the toMapPixelsProjected.
+     */
+    public PointF toMapPixelsTranslated(final PointD in, final PointF reuse) {
         final PointF out;
         if (reuse != null) {
             out = reuse;
@@ -398,6 +443,35 @@ public class Projection implements GeoConstants {
         final float mapSize = mapSize(levelOfDetail);
         out.x = (float) clip(x * mapSize, 0, mapSize - 1);
         out.y = (float) clip(y * mapSize, 0, mapSize - 1);
+        return out;
+    }
+
+    /**
+     * Converts a point from latitude/longitude WGS-84 coordinates (in degrees) into pixel XY
+     * coordinates at a specified level of detail.
+     *
+     * @param latitude Latitude of the point, in degrees
+     * @param longitude Longitude of the point, in degrees
+     * @param levelOfDetail Level of detail, from 1 (lowest detail) to 23 (highest detail)
+     * @param reuse An optional Point to be recycled, or null to create a new one automatically
+     * @return Output parameter receiving the X and Y coordinates in pixels
+     */
+    public static PointD latLongToPixelXY(double latitude, double longitude,
+                                          final double levelOfDetail, final PointD reuse) {
+        latitude = wrap(latitude, -90, 90, 180);
+        longitude = wrap(longitude, -180, 180, 360);
+        final PointD out = (reuse == null ? new PointD() : reuse);
+
+        latitude = clip(latitude, MIN_LATITUDE, MAX_LATITUDE);
+        longitude = clip(longitude, MIN_LONGITUDE, MAX_LONGITUDE);
+
+        final double x = (longitude + 180) / 360;
+        final double sinLatitude = Math.sin(latitude * Math.PI / 180);
+        final double y = 0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI);
+
+        final double mapSize = mapSize((float) levelOfDetail);
+        out.x = clip(x * mapSize, 0, mapSize - 1);
+        out.y = clip(y * mapSize, 0, mapSize - 1);
         return out;
     }
 

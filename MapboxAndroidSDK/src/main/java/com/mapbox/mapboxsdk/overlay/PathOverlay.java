@@ -7,6 +7,7 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.util.PointD;
 import com.mapbox.mapboxsdk.views.MapView;
 import com.mapbox.mapboxsdk.views.util.Projection;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class PathOverlay extends Overlay {
     /**
      * Stores points, converted to the map projection.
      */
-    private ArrayList<PointF> mPoints;
+    private ArrayList<PointD> mPoints;
 
     /**
      * Number of points that have precomputed values.
@@ -76,7 +77,7 @@ public class PathOverlay extends Overlay {
     }
 
     public void clearPath() {
-        this.mPoints = new ArrayList<PointF>();
+        this.mPoints = new ArrayList<PointD>();
         this.mPointsPrecomputed = 0;
     }
 
@@ -85,7 +86,7 @@ public class PathOverlay extends Overlay {
     }
 
     public void addPoint(final double aLatitude, final double aLongitude) {
-        mPoints.add(new PointF((float) aLatitude, (float) aLongitude));
+        mPoints.add(new PointD(aLatitude, aLongitude));
     }
 
     public void addPoints(final LatLng... aPoints) {
@@ -133,14 +134,14 @@ public class PathOverlay extends Overlay {
 
         // precompute new points to the intermediate projection.
         for (; this.mPointsPrecomputed < size; this.mPointsPrecomputed++) {
-            final PointF pt = this.mPoints.get(this.mPointsPrecomputed);
+            final PointD pt = this.mPoints.get(this.mPointsPrecomputed);
             pj.toMapPixelsProjected(pt.x, pt.y, pt);
         }
 
         PointF screenPoint0 = null; // points on screen
         PointF screenPoint1;
-        PointF projectedPoint0; // points from the points list
-        PointF projectedPoint1;
+        PointD projectedPoint0; // points from the points list
+        PointD projectedPoint1;
 
         // clipping rectangle in the intermediate projection, to avoid performing projection.
         final Rect clipBounds = pj.fromPixelsToProjected(pj.getScreenRect());
