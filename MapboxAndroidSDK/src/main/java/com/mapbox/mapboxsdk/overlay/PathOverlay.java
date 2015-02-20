@@ -122,6 +122,12 @@ public class PathOverlay extends Overlay {
             return;
         }
 
+        float offsetX = -canvas.getClipBounds().left;
+        float offsetY = -canvas.getClipBounds().top;
+
+        canvas.save();
+        canvas.translate(-offsetX, -offsetY);
+
         final Projection pj = mapView.getProjection();
 
         // precompute new points to the intermediate projection.
@@ -164,7 +170,7 @@ public class PathOverlay extends Overlay {
             // bounds
             if (screenPoint0 == null) {
                 screenPoint0 = pj.toMapPixelsTranslated(projectedPoint0, this.mTempPoint1);
-                mPath.moveTo(screenPoint0.x, screenPoint0.y);
+                mPath.moveTo(screenPoint0.x + offsetX, screenPoint0.y + offsetY);
             }
 
             screenPoint1 = pj.toMapPixelsTranslated(projectedPoint1, this.mTempPoint2);
@@ -175,7 +181,7 @@ public class PathOverlay extends Overlay {
                 continue;
             }
 
-            mPath.lineTo(screenPoint1.x, screenPoint1.y);
+            mPath.lineTo(screenPoint1.x + offsetX, screenPoint1.y + offsetY);
             // update starting point to next position
             projectedPoint0 = projectedPoint1;
             screenPoint0.x = screenPoint1.x;
@@ -196,6 +202,8 @@ public class PathOverlay extends Overlay {
             canvas.drawPath(mPath, this.mPaint);
             this.mPaint.setStrokeWidth(realWidth);
         }
+
+        canvas.restore();
     }
 
     /**
